@@ -49,7 +49,7 @@ public:
 
 
     //проверка-добавление-удаление вершин
-    bool has_vertex(const Vertex& v) const;
+    int has_vertex(const Vertex& v) const;
     void add_vertex(const Vertex& v);
     bool remove_vertex(const Vertex& v);
     const std::vector<Vertex>& vertices() const;
@@ -120,19 +120,19 @@ Distance Graph<Vertex, Distance>::Edge::get_distance() const
 // Class Graph_______________
     //проверка-добавление-удаление вершин
 template<typename Vertex, typename Distance>
-bool Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
+int Graph<Vertex, Distance>::has_vertex(const Vertex& v) const
 {
     for (size_t i = 0; i < this->_vertices.size(); ++i)
     {
-        if (v == this->_vertices[i]) return true;
+        if (v == this->_vertices[i]) return i;
     }
-    return false;
+    return -1;
 }
 
 template<typename Vertex, typename Distance>
 void Graph<Vertex, Distance>::add_vertex(const Vertex& v)
 {
-    if (this->has_vertex(v)) throw std::runtime_error("данная вершина уже существует!");
+    if (this->has_vertex(v) >= 0) throw std::runtime_error("данная вершина уже существует!");
     this->_vertices.push_back(v);
 }
 
@@ -161,6 +161,19 @@ const std::vector<Vertex>& Graph<Vertex, Distance>::vertices() const
 template<typename Vertex, typename Distance>
 void Graph<Vertex, Distance>::add_edge(const Vertex& from, const Vertex& to, const Distance& d)
 {
+    int ind_vertex_from = has_vertex(from);
+    int ind_vertex_to = has_vertex(to);
+
+    if (ind_vertex_from != -1 && ind_vertex_to != -1 &&
+        (from != to) && has_edge(from, to) == -1)
+    {
+        std::shared_ptr<Graph<Vertex, Distance>::Edge> edge =
+            std::make_shared<Graph<Vertex, Distance>::Edge>(
+                Graph<Vertex, Distance>::Edge(from, to, d));
+        this->_edges.push_back(*edge);
+        return;
+    }
+    throw std::runtime_error("Ошибка при создании ребра!");
 }
 
 template<typename Vertex, typename Distance>
