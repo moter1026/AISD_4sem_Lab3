@@ -35,20 +35,30 @@ int main() {
 		}
 
 		//Заполняю граф рандомными рёбрами
-		for (size_t i = 0; i < 10; i++)
+		for (size_t i = 0; i < 30; i++)
 		{
 			int index_1 = 0, index_2 = 0;
 			while (true)
 			{
 				index_1 = dist(gen) - 1;
 				index_2 = dist(gen) - 1;
-				if (index_1 == index_2) continue;
+				if (-2 == Graph_1.has_edge(a[index_1], a[index_2]) ||
+					0 <= Graph_1.has_edge(a[index_1], a[index_2]))
+					continue;
 				else break;
 			}
 			Graph_1.add_edge(a[index_1], a[index_2], dist(gen) * dist(gen));
 		}
-
 		Graph_1.print();
+		//Удаляю рандомные вершины
+		for (size_t i = 10; i > 6; --i)
+		{
+			dist = std::uniform_int_distribution<>(1, i);
+			int index_1 = dist(gen) - 1;
+			Graph_1.remove_vertex(a[index_1]);
+		}
+		Graph_1.print();
+
 	}
 	catch (const std::exception& e)
 	{
