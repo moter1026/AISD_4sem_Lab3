@@ -59,6 +59,28 @@ int main() {
 		}
 		Graph_1.print();
 
+		//Удаляю рандомное ребро
+		std::cout << "Удаляю рёбра 1-м методом. Рез-ты: ";
+		for(size_t i = 0; i < 5; ++i)
+		{
+			dist = std::uniform_int_distribution<>(1, Graph_1.vertices().size());
+			
+			int index_1 = dist(gen) - 1;
+			int index_2 = dist(gen) - 1;
+			std::cout << Graph_1.remove_edge(Graph_1.vertex(index_1),
+				Graph_1.vertex(index_2)) << ", ";
+		}
+		std::cout << "\n";
+		std::cout << "Удаляю рёбра 2-м методом. Рез-ты: ";
+		for (size_t i = 0; i < 5; ++i)
+		{
+			dist = std::uniform_int_distribution<>(1, Graph_1.all_edges().size());
+
+			int index_1 = dist(gen) - 1;
+			std::cout << Graph_1.remove_edge(Graph_1.edge(index_1)) << ", ";
+		}
+		std::cout << "\n";
+		Graph_1.print();
 	}
 	catch (const std::exception& e)
 	{

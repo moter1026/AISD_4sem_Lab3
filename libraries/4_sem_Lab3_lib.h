@@ -45,6 +45,16 @@ public:
         Distance get_distance() const;
         std::shared_ptr<Vertex>& get_from() const;
         std::shared_ptr<Vertex>& get_to() const;
+
+        bool operator==(const Edge& e) {
+            if (*(this->_from) == *(e._from) &&
+                *(this->_to) == *(e._to) &&
+                this->_distance == e._distance)
+            {
+                return true;
+            }
+            return false;
+        }
     };
 private:
     std::vector<Vertex> _vertices;
@@ -63,6 +73,7 @@ public:
     void add_vertex(const Vertex& v);
     bool remove_vertex(const Vertex& v);
     const std::vector<Vertex>& vertices() const;
+    const Vertex& vertex(size_t index) const;
 
 
     //проверка-добавление-удаление ребер
@@ -73,6 +84,10 @@ public:
     //возвращает индекс ребра в векторе
     int has_edge(const Vertex& from, const Vertex& to) const;
     int has_edge(const Edge& e); //c учетом расстояния в Edge
+    const std::vector<Edge>& all_edges() const;
+    const Edge& edge(size_t index) const {
+        return this->_edges.at(index);
+    }
 
     //получение всех ребер, выходящих из вершины
     std::vector<Edge> edges(const Vertex& vertex) {
@@ -155,6 +170,7 @@ bool Graph<Vertex, Distance>::remove_vertex(const Vertex& v)
             *(this->_edges[i]._to) == v)
         {
             this->_edges.erase(this->_edges.begin() + i);
+            --i;
         }
     }
     size_t count_vertices = this->_vertices.size();
@@ -173,6 +189,12 @@ template<typename Vertex, typename Distance>
 const std::vector<Vertex>& Graph<Vertex, Distance>::vertices() const
 {
     return this->_vertices;
+}
+
+template<typename Vertex, typename Distance> 
+const Vertex& Graph<Vertex, Distance>::vertex(size_t index) const
+{
+    return this->_vertices.at(index);
 }
 
 
@@ -199,18 +221,31 @@ void Graph<Vertex, Distance>::add_edge(const Vertex& from, const Vertex& to, con
 template<typename Vertex, typename Distance>
 bool Graph<Vertex, Distance>::remove_edge(const Vertex& from, const Vertex& to)
 {
+    int index_edge = this->has_edge(from, to);
+    if (index_edge >= 0)
+    {
+        this->_edges.erase(this->_edges.begin() + index_edge);
+        return true;
+    }
     return false;
 }
 
 template<typename Vertex, typename Distance>
 bool Graph<Vertex, Distance>::remove_edge(const Edge& e)
 {
+    int index_edge = this->has_edge(e);
+    if (index_edge >= 0)
+    {
+        this->_edges.erase(this->_edges.begin() + index_edge);
+        return true;
+    }
     return false;
 }
 
 template<typename Vertex, typename Distance>
 int Graph<Vertex, Distance>::has_edge(const Vertex& from, const Vertex& to) const
 {
+    if (!from || !to) throw std::runtime_error("Переданы несуществющие вершины!");
     if (from == to) return -2;
 
     size_t count_edges = this->_edges.size();
@@ -238,7 +273,12 @@ int Graph<Vertex, Distance>::has_edge(const Edge& e)
     return -1;
 }
 
-
+template<typename Vertex, typename Distance>
+const std::vector<typename  Graph<Vertex, Distance>::Edge>& 
+Graph<Vertex, Distance>::all_edges() const 
+{
+    return this->_edges;
+}
 
 template<typename Vertex, typename Distance>
 size_t Graph<Vertex, Distance>::order() const //порядок 
