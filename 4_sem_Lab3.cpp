@@ -81,6 +81,23 @@ int main() {
 		}
 		std::cout << "\n";
 		Graph_1.print();
+
+		//получение всех ребер, выходящих из вершины
+		std::cout << "\n";
+		std::cout << BLUE_TEXT << "получение всех ребер, выходящих из вершин:\n" << RESET_TEXT;
+		std::cout << GRAY_TEXT;
+		for (size_t i = 0; i < Graph_1.vertices().size(); ++i)
+		{
+			std::cout << "\tВершина " << Graph_1.vertex(i) << " : ";
+			auto edges = Graph_1.edges(Graph_1.vertex(i));
+			size_t count_edges = edges.size();
+			for (size_t i = 0; i < count_edges; i++)
+			{
+				std::cout << edges[i] << "; ";
+			}
+			std::cout << "\n";
+		}
+		std::cout << RESET_TEXT;
 	}
 	catch (const std::exception& e)
 	{

@@ -5,6 +5,7 @@
 #include <memory>
 #include <iomanip>
 #include <exception>
+#include <fstream>
 
 const char* BLACK_TEXT = "\033[30m";
 const char* RED_TEXT = "\033[31m";
@@ -42,9 +43,11 @@ public:
         }
         ~Edge() = default;
 
+        //_________________________
         Distance get_distance() const;
         std::shared_ptr<Vertex>& get_from() const;
         std::shared_ptr<Vertex>& get_to() const;
+        //_________________________
 
         bool operator==(const Edge& e) {
             if (*(this->_from) == *(e._from) &&
@@ -54,6 +57,11 @@ public:
                 return true;
             }
             return false;
+        }
+        friend std::ostream& operator<<(std::ostream& stream, Edge& e) {
+            stream << "from: " << *(e._from) << ", " <<
+                "to: " << *(e._to) << " with distance: " << e._distance;
+            return stream;
         }
     };
 private:
@@ -90,7 +98,8 @@ public:
     }
 
     //получение всех ребер, выходящих из вершины
-    std::vector<Edge> edges(const Vertex& vertex) {
+    std::vector<Edge> edges(const Vertex& vertex)
+    {
         std::vector<Edge> edgesFrom;
         for (size_t i = 0; i < this->_edges.size(); ++i)
         {
