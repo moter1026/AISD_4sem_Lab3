@@ -5,7 +5,6 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
-
 #include <iostream>
 #include <array>
 #include <random>
@@ -88,14 +87,51 @@ int main() {
 		std::cout << GRAY_TEXT;
 		for (size_t i = 0; i < Graph_1.vertices().size(); ++i)
 		{
-			std::cout << "\tВершина " << Graph_1.vertex(i) << " : ";
 			auto edges = Graph_1.edges(Graph_1.vertex(i));
-			size_t count_edges = edges.size();
-			for (size_t i = 0; i < count_edges; i++)
+			size_t degree = Graph_1.degree(Graph_1.vertex(i));
+			std::cout << "\tВершина " << Graph_1.vertex(i) << " со степенью " <<
+				degree << " : ";
+			for (size_t j = 0; j < degree; ++j)
 			{
-				std::cout << edges[i] << "; ";
+				std::cout << edges[j] << "; ";
 			}
 			std::cout << "\n";
+		}
+		std::cout << RESET_TEXT;
+
+
+		//Проверка алгоритма Дейкстры
+		Graph<int> Graph_2;
+		int b[] = { 1,2,3,4,5,6,7 };
+		Graph_2.add_vertex(b[0]);
+		Graph_2.add_vertex(b[1]);
+		Graph_2.add_vertex(b[2]);
+		Graph_2.add_vertex(b[3]);
+		Graph_2.add_vertex(b[4]);
+		Graph_2.add_vertex(b[5]);
+		Graph_2.add_vertex(b[6]);
+
+		Graph_2.add_edge(b[0], b[1], 2);
+		Graph_2.add_edge(b[0], b[2], 5);
+		Graph_2.add_edge(b[0], b[5], 3);
+		Graph_2.add_edge(b[0], b[6], 6);
+		Graph_2.add_edge(b[1], b[2], 4);
+		Graph_2.add_edge(b[2], b[3], 3);
+		Graph_2.add_edge(b[3], b[1], 4);
+		Graph_2.add_edge(b[3], b[4], 3);
+		Graph_2.add_edge(b[4], b[0], 7);
+		Graph_2.add_edge(b[4], b[5], 5);
+		Graph_2.add_edge(b[5], b[3], 8);
+		Graph_2.add_edge(b[6], b[2], 6);
+		Graph_2.add_edge(b[6], b[4], 7);
+		Graph_2.add_edge(b[6], b[5], 4);
+
+		auto shortest_path = Graph_2.shortest_path(b[0], b[3]);
+		int size = shortest_path.size();
+		std::cout << GREEN_TEXT;
+		for (size_t i = 0; i < size; ++i)
+		{
+			std::cout << shortest_path[i] << "\n";
 		}
 		std::cout << RESET_TEXT;
 	}

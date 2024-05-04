@@ -16,6 +16,16 @@ const char* LIGHT_BLUE_TEXT = "\033[36m";
 const char* GRAY_TEXT = "\033[37m";
 const char* RESET_TEXT = "\033[0m";
 
+template<typename T>
+int find_in_vector(const std::vector<T>& vec, const T& el) {
+    size_t length = vec.size();
+    for (int i = 0; i < length; ++i)
+    {
+        if (vec[i] == el) return i;
+    }
+    return -1;
+}
+
 
 
 template<typename Vertex, typename Distance = double>
@@ -98,7 +108,7 @@ public:
     }
 
     //получение всех ребер, выходящих из вершины
-    std::vector<Edge> edges(const Vertex& vertex)
+    std::vector<Edge> edges(const Vertex& vertex) const
     {
         std::vector<Edge> edgesFrom;
         for (size_t i = 0; i < this->_edges.size(); ++i)
@@ -298,7 +308,7 @@ size_t Graph<Vertex, Distance>::order() const //порядок
 template<typename Vertex, typename Distance>
 size_t Graph<Vertex, Distance>::degree(const Vertex& v) const //степень вершины
 {
-    return size_t();
+    return this->edges(v).size();
 }
 
 //поиск кратчайшего пути
@@ -306,7 +316,188 @@ template<typename Vertex, typename Distance>
 std::vector<typename  Graph<Vertex, Distance>::Edge>
 Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) const
 {
-    return std::vector<Edge>();
+//    //Объявляем необходимые переменные и делаем необходимые проверки
+    size_t count_vertex = this->_vertices.size();
+    if (count_vertex < 1) throw std::runtime_error("Слишком мало вершин в графе!");
+
+    std::vector<std::vector<std::unique_ptr<Distance>>> alg_table(count_vertex);
+    for (size_t i = 0; i < count_vertex; ++i) {
+        for (size_t j = 0; j < count_vertex; ++j) {
+            alg_table[i].push_back(std::make_unique<Distance>()); // Создаем и добавляем уникальный указатель
+        }
+    }
+    std::vector<Distance> min_len;
+    std::vector<Vertex> fixed;
+    Distance shortest_length;
+
+    //Заполняем самую первую строку nullptr, кроме эл-та from
+    std::cout << GREEN_TEXT << "Алгоритм Дейкстры:\n" << RESET_TEXT;
+    for (size_t i = 0; i < count_vertex; ++i)
+    {
+        if (this->_vertices[i] == from)
+        {
+            alg_table[0][i] = std::make_unique<Distance>(Distance(0));
+            std::cout << std::setw(5) << *(alg_table[0][i]);
+        }
+        else
+        {
+            alg_table[0][i] = nullptr;
+            std::cout << std::setw(5) << "-";
+        }
+
+    }
+    std::cout << std::endl;
+
+
+    //Основная часть выполнения алгоритма
+    bool first_row = true;
+    for (size_t index = 0; index < count_vertex; ++index)
+    {
+        Vertex now_min_vertex;
+        //first_el нужна для запоминания первого эл-та, который не был обработан,
+        //чтобы в дальнейшем искать МИНИМАЛЬНЫЙ доступный в строке
+        bool first_el = true;
+        Distance now_min = (first_row)? 0 : min_len.back();
+        for (size_t i = 0; i < count_vertex; ++i)
+        {
+            if (!first_row &&
+                (alg_table[index][i] == nullptr ||
+                -1 != find_in_vector(fixed, this->_vertices[i]) ))
+            {
+                continue;
+            }
+            else if (first_el)
+            {
+                now_min = *(alg_table[index][i]);
+                now_min_vertex = this->_vertices[i];
+                first_el = false;
+            }
+            else if(alg_table[index][i] != nullptr &&
+                now_min > *(alg_table[index][i]))
+            {
+                now_min = *(alg_table[index][i]);
+                now_min_vertex = this->_vertices[i];
+            }
+        }
+        first_row = false;
+        min_len.push_back(now_min);
+        fixed.push_back(now_min_vertex);
+        if (now_min_vertex == to)
+            shortest_length = now_min;
+
+        //Получаем все дуги, выходящие из нашей вершины,
+        //и создаём вектор с конечными вершинами
+        auto edges = this->edges(now_min_vertex);
+        int length_edges = edges.size();
+        std::vector<Vertex> to_vertices;
+        for (size_t i = 0; i < length_edges; ++i)
+        {
+            to_vertices.push_back( *(edges[i]._to) );
+        }
+
+        //Если дошли до последней строки, то необходимо выйти из цикла,
+        //чтобы не выйти за пределы разрешённой памяти
+        if (index == count_vertex - 1)
+            break;
+        //Дальше заполняем следующую строку по алгоритму Дейкстры
+        for (size_t i = 0; i < count_vertex; ++i)
+        {
+            //Если вершина не была фиксирована и нынешняя зафиксированная вершина
+            //имеет ребро в итерируемый эл-нт, то либо меняем значение в таблице,
+            //либо оставляем прежнее
+            if (-1 != find_in_vector(to_vertices, this->_vertices[i]) &&
+                -1 == find_in_vector(fixed, this->_vertices[i]))
+            {
+                int ind = find_in_vector(to_vertices, this->_vertices[i]);
+                if (alg_table[index][i] == nullptr)
+                {
+                    alg_table[index + 1][i] = std::make_unique<Distance>(min_len.back() + edges[ind]._distance);
+                }
+                else if (*(alg_table[index][i]) > (min_len.back() + edges[ind]._distance))
+                {
+                    alg_table[index + 1][i] = std::make_unique<Distance>(min_len.back() + edges[ind]._distance);
+                }
+                else
+                {
+                    Distance el = *(alg_table[index][i]);
+                    alg_table[index + 1][i] = std::make_unique<Distance>(el);
+                }
+                std::cout << std::setw(5) << *(alg_table[index + 1][i]);
+            }
+            //Если вершина была фиксирована или нынешняя зафиксированная вершина
+            //НЕ имеет ребро до итерируемого эл-нта, то оставляем прошлое значение
+            else
+            {
+                if (alg_table[index][i] == nullptr ||
+                    -1 != find_in_vector(fixed, this->_vertices[i]))
+                    alg_table[index + 1][i] = nullptr;
+                else
+                    alg_table[index + 1][i] = std::make_unique<Distance>(*(alg_table[index][i]));
+                //___
+                if (alg_table[index + 1][i] == nullptr)
+                    std::cout << std::setw(5) << "-";
+                else
+                    std::cout << std::setw(5) << *(alg_table[index + 1][i]);
+
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    std::vector<Graph<Vertex, Distance>::Edge> result;
+    int index_in_fixed = find_in_vector(fixed, to);
+    std::vector<Graph<Vertex, Distance>::Edge> all_edges = this->all_edges();
+    size_t count_all_edges = all_edges.size();
+    int index = index_in_fixed;
+    while (index > 0)
+    {
+        //Находим вершины, из которых выходят рёбра в итерируемый элемент
+        //и запоминаем их в to_el
+        Distance now_len = min_len[index];
+        std::vector<Graph<Vertex, Distance>::Edge> to_el;
+        std::vector<Distance> min_distance_to_el;
+
+        for (size_t i = 0; i < count_all_edges; ++i)
+        {
+            if (*(all_edges[i]._to) == fixed[index])
+                to_el.push_back(all_edges[i]);
+        }
+        size_t count_edges_to_el = to_el.size();
+
+        //Находим минимальные пути до найденных ранее элементов
+        for (size_t i = 0; i < count_edges_to_el; ++i)
+        {
+            int index_el = find_in_vector(this->_vertices, *(to_el[i]._from));
+            Distance min = now_len;
+            for (size_t j = 0; j < count_vertex; ++j)
+            {
+                if (alg_table[j][index_el] != nullptr &&
+                    *(alg_table[j][index_el]) < min)
+                    min = *(alg_table[j][index_el]);
+            }
+            min_distance_to_el.push_back(min);
+        }
+
+        //Проверяем из какого эл-та могли прийти в наш эл-нт
+        for (size_t i = 0; i < count_edges_to_el; ++i)
+        {
+            Distance distance = to_el[i]._distance;
+            
+            if (now_len - distance == min_distance_to_el[i])
+            {
+                result.push_back(to_el[i]);
+                index = find_in_vector(fixed, *(to_el[i]._from));
+                break;
+            }
+            else
+            {
+                throw std::runtime_error("Нет кратчайшего пути :-(");
+            }
+        }
+        
+    }
+
+    return result;
 }
 
 //обход
