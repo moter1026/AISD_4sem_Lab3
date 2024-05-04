@@ -134,6 +134,15 @@ int main() {
 			std::cout << shortest_path[i] << "\n";
 		}
 		std::cout << RESET_TEXT;
+
+		Graph_2.print();
+		//Проверка обхода
+		std::vector<int> walk = Graph_2.walk(b[0]);
+		std::cout << "\n" << GREEN_TEXT << "Обход графа: " << RESET_TEXT;
+		for (auto el : walk) {
+			std::cout << " -> " << el;
+		}
+		std::cout << "\n";
 	}
 	catch (const std::exception& e)
 	{

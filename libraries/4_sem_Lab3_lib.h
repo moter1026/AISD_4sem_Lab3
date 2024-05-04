@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <vector>
+#include <queue>
+#include <array>
 #include <memory>
 #include <iomanip>
 #include <exception>
@@ -31,6 +33,22 @@ int find_in_vector(const std::vector<T>& vec, const T& el) {
 template<typename Vertex, typename Distance = double>
 class Graph {
 public:
+    struct Color {
+        bool _black;
+        bool _gray;
+        bool _white;
+        Color() : _black(false), _gray(false), _white(true) {};
+        void next_step() {
+            if (this->_white) {
+                this->_white = false;
+                this->_gray = true;
+            }
+            else if (this->_gray) {
+                this->_gray = false;
+                this->_black = true;
+            }
+        }
+    };
     struct Edge {
         std::shared_ptr<Vertex> _from;
         std::shared_ptr<Vertex> _to;
@@ -504,7 +522,54 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
 template<typename Vertex, typename Distance>
 std::vector<Vertex> Graph<Vertex, Distance>::walk(const Vertex& start_vertex) const
 {
-    return std::vector<Vertex>();
+    //Инициализация
+    int count_vertecies = this->_vertices.size();
+    std::vector<std::shared_ptr<Graph::Color>> colors;
+    std::vector<std::shared_ptr<Vertex>> parents;
+    std::vector<int> lenghts;
+    for (size_t i = 0; i < count_vertecies; ++i)
+    {
+        Graph::Color color_white;
+        colors.push_back(std::make_shared<Graph::Color>(color_white));
+
+        parents.push_back(std::make_shared<Vertex>());
+        lenghts.push_back(-1);
+    }
+
+    std::vector<Vertex> result;
+
+    //Процедура обхода
+    int start_index = find_in_vector(this->_vertices, start_vertex);
+    std::queue<Vertex> queue;
+    queue.push(start_vertex);
+    (*(colors[start_index])).next_step();
+    parents[start_index] = nullptr;
+    lenghts[start_index] = 0;
+
+    while (!queue.empty())
+    {
+        Vertex& now_el = queue.front();
+        int now_index = find_in_vector(this->_vertices, now_el);
+        std::vector<Graph<Vertex, Distance>::Edge> edges = this->edges(now_el);
+        std::vector<Vertex> to_from_now_el;
+        for (auto el_edges : edges) {
+            Vertex& el = *(el_edges._to);
+
+            int index_vert = find_in_vector(this->_vertices, el);
+            if ((*(colors[index_vert]))._white == true)
+            {
+                (*(colors[index_vert])).next_step();
+                parents[index_vert] = std::make_shared<Vertex>(now_el);
+                lenghts[index_vert] = lenghts[now_index] + 1;
+                queue.push(el);
+            }
+        }
+        (*(colors[now_index])).next_step();
+        queue.pop();
+        result.push_back(now_el);
+    }
+
+    return result;
 }
 
 template<typename Vertex, typename Distance>
