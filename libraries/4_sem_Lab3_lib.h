@@ -71,12 +71,6 @@ public:
         }
         ~Edge() = default;
 
-        //_________________________
-        Distance get_distance() const;
-        std::shared_ptr<Vertex>& get_from() const;
-        std::shared_ptr<Vertex>& get_to() const;
-        //_________________________
-
         bool operator==(const Edge& e) {
             if (*(this->_from) == *(e._from) &&
                 *(this->_to) == *(e._to) &&
@@ -144,11 +138,13 @@ public:
 
     //поиск кратчайшего пути
     std::vector<Edge> shortest_path(const Vertex& from,
-        const Vertex& to) const;
+        const Vertex& to, bool print = true) const;
     //обход
     std::vector<Vertex>  walk(const Vertex& start_vertex)const;
 
     void print() const;
+
+    Vertex* find_stock();
 };
 
 
@@ -156,27 +152,6 @@ public:
 
 
 
-
-
-
-// Class Graph::Edge_______________
-template<typename Vertex, typename Distance>
-std::shared_ptr<Vertex>& Graph<Vertex, Distance>::Edge::get_from() const
-{
-    return this->_from;
-}
-
-template<typename Vertex, typename Distance>
-std::shared_ptr<Vertex>& Graph<Vertex, Distance>::Edge::get_to() const
-{
-    return this->_to;
-}
-
-template<typename Vertex, typename Distance>
-Distance Graph<Vertex, Distance>::Edge::get_distance() const
-{
-    return this->_distance;
-}
 
 
 // Class Graph_______________
@@ -332,9 +307,9 @@ size_t Graph<Vertex, Distance>::degree(const Vertex& v) const //степень �
 //поиск кратчайшего пути
 template<typename Vertex, typename Distance>
 std::vector<typename  Graph<Vertex, Distance>::Edge>
-Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) const
+Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to, bool print) const
 {
-//    //Объявляем необходимые переменные и делаем необходимые проверки
+    //Объявляем необходимые переменные и делаем необходимые проверки
     size_t count_vertex = this->_vertices.size();
     if (count_vertex < 1) throw std::runtime_error("Слишком мало вершин в графе!");
 
@@ -349,22 +324,27 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
     Distance shortest_length;
 
     //Заполняем самую первую строку nullptr, кроме эл-та from
-    std::cout << GREEN_TEXT << "Алгоритм Дейкстры:\n" << RESET_TEXT;
+    if (print)
+        std::cout << GREEN_TEXT << "Алгоритм Дейкстры:\n" << RESET_TEXT;
+
     for (size_t i = 0; i < count_vertex; ++i)
     {
         if (this->_vertices[i] == from)
         {
             alg_table[0][i] = std::make_unique<Distance>(Distance(0));
-            std::cout << std::setw(5) << *(alg_table[0][i]);
+            if (print)
+                std::cout << std::setw(5) << *(alg_table[0][i]);
         }
         else
         {
             alg_table[0][i] = nullptr;
-            std::cout << std::setw(5) << "-";
+            if (print)
+                std::cout << std::setw(5) << "-";
         }
 
     }
-    std::cout << std::endl;
+    if (print)
+        std::cout << std::endl;
 
 
     //Основная часть выполнения алгоритма
@@ -384,7 +364,7 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
             {
                 continue;
             }
-            else if (first_el)
+            else if (first_el && alg_table[index][i] != nullptr)
             {
                 now_min = *(alg_table[index][i]);
                 now_min_vertex = this->_vertices[i];
@@ -440,7 +420,8 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
                     Distance el = *(alg_table[index][i]);
                     alg_table[index + 1][i] = std::make_unique<Distance>(el);
                 }
-                std::cout << std::setw(5) << *(alg_table[index + 1][i]);
+                if (print)
+                    std::cout << std::setw(5) << *(alg_table[index + 1][i]);
             }
             //Если вершина была фиксирована или нынешняя зафиксированная вершина
             //НЕ имеет ребро до итерируемого эл-нта, то оставляем прошлое значение
@@ -452,14 +433,14 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
                 else
                     alg_table[index + 1][i] = std::make_unique<Distance>(*(alg_table[index][i]));
                 //___
-                if (alg_table[index + 1][i] == nullptr)
+                if (alg_table[index + 1][i] == nullptr && print)
                     std::cout << std::setw(5) << "-";
-                else
+                else if (print)
                     std::cout << std::setw(5) << *(alg_table[index + 1][i]);
-
             }
         }
-        std::cout << std::endl;
+        if (print)
+            std::cout << std::endl;
     }
 
     std::vector<Graph<Vertex, Distance>::Edge> result;
@@ -507,7 +488,7 @@ Graph<Vertex, Distance>::shortest_path(const Vertex& from, const Vertex& to) con
                 index = find_in_vector(fixed, *(to_el[i]._from));
                 break;
             }
-            else
+            else if (i == count_edges_to_el - 1)
             {
                 throw std::runtime_error("Нет кратчайшего пути :-(");
             }
@@ -611,3 +592,65 @@ void Graph<Vertex, Distance>::print() const
     }
 }
 
+template<typename Vertex, typename Distance>
+inline Vertex* Graph<Vertex, Distance>::find_stock()
+{
+    int count_vertecies = this->_vertices.size();
+    std::vector <Distance> medium_lengths;
+    int index_max_medium = 0;
+
+    std::vector<int> bad_indexes;
+    for (size_t i = 0; i < count_vertecies; ++i)
+    {
+        Distance sum = 0;
+        bool was_size_null = false;
+        bool print = true;
+        for (size_t j = 0; j < count_vertecies; ++j)
+        {
+            if (i == j) continue;
+            std::vector<Graph<Vertex, Distance>::Edge> edges =
+                this->shortest_path(this->_vertices[i], this->_vertices[j], print);
+            print = false;
+            for (Graph<Vertex, Distance>::Edge one_edge : edges) {
+                sum += one_edge._distance;
+            }
+            if (edges.size() == 0)
+            {
+                was_size_null = true;
+            }
+        }
+
+        if (was_size_null)
+        {
+            bad_indexes.push_back(i);
+            medium_lengths.push_back(0);
+            continue;
+        }
+       
+        Distance medium = sum / (count_vertecies - 1);
+        medium_lengths.push_back(medium);
+        index_max_medium = (medium_lengths[medium_lengths.size() - 1] < medium) ? i : index_max_medium;
+    }
+
+    int ind = -1;
+    bool first = true;
+    Distance min;
+    for (int i = 0; i < medium_lengths.size(); ++i)
+    {
+        if (medium_lengths[i] == 0 &&
+            find_in_vector(bad_indexes, i) != -1) 
+        {
+            continue;
+        }
+        if (first || min > medium_lengths[i] )
+        {
+            ind = i;
+            min = medium_lengths[i];
+            first = false;
+        }
+    }
+
+    if (ind == -1)
+        return nullptr;
+    return &(this->_vertices[ind]);
+}

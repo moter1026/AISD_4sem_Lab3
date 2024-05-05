@@ -1,6 +1,4 @@
-﻿// 4_sem_Lab2.cpp: определяет точку входа для приложения.
-//
-#pragma once
+﻿#pragma once
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -102,7 +100,7 @@ int main() {
 
 		//Проверка алгоритма Дейкстры
 		Graph<int> Graph_2;
-		int b[] = { 1,2,3,4,5,6,7 };
+		int b[] = { 1,2,3,4,5,6,7,8 };
 		Graph_2.add_vertex(b[0]);
 		Graph_2.add_vertex(b[1]);
 		Graph_2.add_vertex(b[2]);
@@ -110,6 +108,7 @@ int main() {
 		Graph_2.add_vertex(b[4]);
 		Graph_2.add_vertex(b[5]);
 		Graph_2.add_vertex(b[6]);
+		Graph_2.add_vertex(b[7]);
 
 		Graph_2.add_edge(b[0], b[1], 2);
 		Graph_2.add_edge(b[0], b[2], 5);
@@ -125,8 +124,9 @@ int main() {
 		Graph_2.add_edge(b[6], b[2], 6);
 		Graph_2.add_edge(b[6], b[4], 7);
 		Graph_2.add_edge(b[6], b[5], 4);
+		Graph_2.add_edge(b[3], b[7], 1);
 
-		auto shortest_path = Graph_2.shortest_path(b[0], b[3]);
+		auto shortest_path = Graph_2.shortest_path(b[0], b[4]);
 		int size = shortest_path.size();
 		std::cout << GREEN_TEXT;
 		for (size_t i = 0; i < size; ++i)
@@ -136,6 +136,7 @@ int main() {
 		std::cout << RESET_TEXT;
 
 		Graph_2.print();
+
 		//Проверка обхода
 		std::vector<int> walk = Graph_2.walk(b[0]);
 		std::cout << "\n" << GREEN_TEXT << "Обход графа: " << RESET_TEXT;
@@ -143,6 +144,30 @@ int main() {
 			std::cout << " -> " << el;
 		}
 		std::cout << "\n";
+
+		int* best_point = Graph_1.find_stock();
+		if (best_point)
+		{
+			std::cout << "\n" << GREEN_TEXT << "Лучшая точка для склада для графа Graph_1: " <<
+				*best_point << "\n" << RESET_TEXT;
+		}
+		else {
+			std::cout << "\n" << YELLOW_TEXT << "Нет лучшей точки графа Graph_1: \n" << RESET_TEXT;
+		}
+
+
+
+		best_point = Graph_2.find_stock();
+		if (best_point)
+		{
+			std::cout << "\n" << GREEN_TEXT << "Лучшая точка для склада для графа Graph_2: " <<
+				*best_point << RESET_TEXT;
+		}
+		else {
+			std::cout << "\n" << YELLOW_TEXT << "Нет лучшей точки графа Graph_2: " << RESET_TEXT;
+		}
+		
+
 	}
 	catch (const std::exception& e)
 	{
